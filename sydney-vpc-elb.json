@@ -1,0 +1,220 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation Template for VPC",
+
+  "Parameters" : {
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+       "Default":"cloudform-key",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.micro"
+    }
+
+  },
+
+
+  "Resources": {
+
+     "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [{"Key" : "Application", "Value" : "StackId" } ]
+      }
+    },
+
+"VPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "CidrBlock" : "192.168.0.0/16",
+        "Tags" : [
+          {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} },
+          {"Key" : "Network", "Value" : "Public" },
+{"Key" : "Name", "Value" : "CLoudFormation-VPC" }
+        ]
+      }
+    },
+
+ "PublicSubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : "192.168.1.0/24",
+        "AvailabilityZone" : "ap-southeast-2a",
+        "Tags" : [
+          {"Key" : "Network", "Value" : "SydneyPublicSubnet1" }
+        ]
+      }
+    },
+
+"PublicSubnet2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : "192.168.2.0/24",
+        "AvailabilityZone" : "ap-southeast-2b",
+        "Tags" : [
+
+          {"Key" : "Network", "Value" : "SydneyPublicSubnet1" }
+        ]
+      }
+    },
+
+"PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "Tags" : [
+          {"Key" : "Application", "Value" :" StackId"}
+        ]
+      }
+    },
+
+   "GatewayToInternet" : {
+       "Type" : "AWS::EC2::VPCGatewayAttachment",
+       "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+         "InternetGatewayId" : { "Ref" : "InternetGateway" }
+       }
+    },
+
+ "PublicRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "DependsOn" : "GatewayToInternet",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PublicRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGateway" }
+      }
+    },
+"PublicSubnetRouteTableAssociation1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnet1" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+
+   "PublicSubnetRouteTableAssociation2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnet2" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+
+
+
+ "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable access to the bastion host",
+        "VpcId" : { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : "22",  "CidrIp" : "0.0.0.0/0"},{ "IpProtocol" : "tcp", "FromPort" : "80",  "ToPort" : "80",  "CidrIp" : "0.0.0.0/0"}, { "IpProtocol" : "icmp", "FromPort" : "8", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" } ]
+      }
+    },
+
+
+
+    "EC2Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : "ami-43874721",
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+             "#!/bin/bash \n",
+	     "# Make certain that cfn itself is up to date \n",
+             "yum update -y aws-cfn-bootstrap \n",
+             "yum install -y httpd \n",
+
+             "# Install the files and packages from the metadata\n",
+             "service httpd start \n",
+             "chkconfig httpd on \n",
+ 	     "echo '<h1>Hello from Sydney 1 </h1>'>/var/www/html/index.html \n"
+		]]}},
+        "NetworkInterfaces" : [
+          { "DeviceIndex" : "0",
+            "AssociatePublicIpAddress" : "true",
+            "DeleteOnTermination" : "true",
+            "SubnetId" : { "Ref" : "PublicSubnet1" },
+            "GroupSet" : [ { "Ref" : "SecurityGroup" } ]
+}],
+  "Tags" : [{"Key" : "Name", "Value" : "SydneyWebServer1" }]
+      }
+    },
+
+
+    "EC2Instance2" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : "ami-43874721",
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+             "#!/bin/bash \n",
+	     "# Make certain that cfn itself is up to date \n",
+             "yum update -y aws-cfn-bootstrap \n",
+             "yum install -y httpd \n",
+
+             "# Install the files and packages from the metadata\n",
+             "service httpd start \n",
+             "chkconfig httpd on \n",
+ 	     "echo '<h1>Hello from Sydney 2 </h1>'>/var/www/html/index.html \n"
+		]]}},
+        "NetworkInterfaces" : [
+          { "DeviceIndex" : "0",
+            "AssociatePublicIpAddress" : "true",
+
+            "DeleteOnTermination" : "true",
+            "SubnetId" : { "Ref" : "PublicSubnet2" },
+            "GroupSet" : [ { "Ref" : "SecurityGroup" } ]
+}],
+
+      "Tags" : [{"Key" : "Name", "Value" : "SydneyWebServer2" }]
+      }
+
+    },
+
+
+"ElasticLoadBalancer1" : {
+  "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+  "Properties" : {
+     "Subnets": [ { "Ref": "PublicSubnet1" } ,{ "Ref": "PublicSubnet2" }],
+     "SecurityGroups" : [ {"Ref" : "SecurityGroup"} ],
+      "Instances" : [ { "Ref" : "EC2Instance" },{ "Ref" : "EC2Instance2" } ],
+       "Listeners": [{
+      "LoadBalancerPort": "80",
+      "InstancePort": "80",
+      "Protocol": "HTTP"
+    }],
+    "HealthCheck": {
+      "Target": "HTTP:80/",
+      "HealthyThreshold": "2",
+      "UnhealthyThreshold": "3",
+      "Interval": "6",
+      "Timeout": "5"
+    }
+  }
+}
+
+}
+,
+
+"Outputs" : {
+  "DNSName" : {
+    "Description": "The DNSName of the  load balancer",
+    "Value" : { "Fn::GetAtt" : [ "ElasticLoadBalancer1", "DNSName" ]}
+
+  }
+
+
+}
+}
