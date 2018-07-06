@@ -18,14 +18,7 @@
 
 
     }
-    ,
-
-    "SubnetId" : {
-
-    "Description" : "Please insert the Subnet Id of a subnet that's inside the VPC you selected.You can find this info in the VPC console under Subnets  ",
-      "Type" : "AWS::EC2::Subnet::Id"
-
-      }
+   
 
 
 
@@ -45,8 +38,7 @@
           "GroupSet"                 : [{ "Ref" : "SimpleInstanceSg" }],
           "AssociatePublicIpAddress" : "true",
           "DeviceIndex"              : "0",
-          "DeleteOnTermination"      : "true",
-          "SubnetId"                 : { "Ref": "SubnetId"}
+          "DeleteOnTermination"      : "true"
         }]
 
       }
