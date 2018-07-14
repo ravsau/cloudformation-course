@@ -1,0 +1,270 @@
+
+
+
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation Template for VPC",
+
+  "Parameters" : {
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.micro"
+    }
+    ,
+
+    "AmiType" : {
+      "Description" : "Select the kind of AMI(image) you want to use",
+      "Type" : "String",
+      "Default" : "linux",
+      "AllowedValues" : ["linux", "windows"]
+    }
+
+  },
+
+
+
+"Mappings" : {
+  "AMI" : {
+    "linux" : {
+      "id" : "ami-b70554c8"
+    },
+    "windows" : {
+      "id" : "ami-c83264b7"
+    }
+  }
+}
+,
+
+
+  "Resources": {
+
+     "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [{"Key" : "Name", "Value" : "Va-VPC" } ]
+      }
+    },
+
+"VPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "CidrBlock" : "10.0.0.0/16",
+        "Tags" : [
+
+{"Key" : "Name", "Value" : "VA-VPC-10.0.0.0/16" }
+        ]
+      }
+    },
+
+ "PublicSubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : "10.0.1.0/24",
+        "AvailabilityZone" : "us-east-1a",
+        "Tags" : [
+          {"Key" : "Name", "Value" : "Va-PublicSubnet1-10.0.1.0/24" }
+        ]
+      }
+    },
+
+    "PrivateSubnet2" : {
+          "Type" : "AWS::EC2::Subnet",
+          "Properties" : {
+            "VpcId" : { "Ref" : "VPC" },
+            "CidrBlock" : "10.0.2.0/24",
+            "AvailabilityZone" : "us-east-1b",
+            "Tags" : [
+
+              {"Key" : "Name", "Value" : "Va-PrivateSubnet-2-10.0.2.0/24" }
+            ]
+          }
+        }
+        ,
+
+  "PublicSubnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : "10.0.3.0/24",
+        "AvailabilityZone" : "us-east-1c",
+        "Tags" : [
+
+          {"Key" : "Name", "Value" : "Va-PublicSubnet3-10.0.3.0/24" }
+        ]
+      }
+    },
+
+
+
+  "PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "Tags" : [
+          {"Key" : "Name", "Value" :" Public-RT-Va"}
+        ]
+      }
+    },
+
+
+   "GatewayToInternet" : {
+       "Type" : "AWS::EC2::VPCGatewayAttachment",
+       "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+         "InternetGatewayId" : { "Ref" : "InternetGateway" }
+       }
+    },
+
+  "PublicRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "DependsOn" : "GatewayToInternet",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PublicRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGateway" }
+      }
+    },
+  "PublicSubnetRouteTableAssociation1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnet1" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+
+
+
+   "PublicSubnetRouteTableAssociation2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnet3" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+
+
+
+  "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupName" : "WebServer-SG-VA",
+        "GroupDescription" : "Enable access to the bastion host",
+        "VpcId" : { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : 22,  "CidrIp" : "0.0.0.0/0"},{ "IpProtocol" : "tcp", "FromPort" : "80",  "ToPort" : "80",  "CidrIp" : "0.0.0.0/0" } ,{ "IpProtocol" : "icmp", "FromPort" : "8", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" } ],
+         "Tags" : [
+          { "Key" : "Name", "Value" : "WebServer-SG-Virginia" }
+        ]
+      }
+    },
+
+
+     "SecurityGroupPrivate" : {
+          "Type" : "AWS::EC2::SecurityGroup",
+          "Properties" : {
+            "GroupName" : "Private-SG-VA",
+            "GroupDescription" : "Private-SG-VA",
+            "VpcId" : { "Ref" : "VPC" },
+            "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : 22,  "CidrIp" : "10.0.0.0/16"},{ "IpProtocol" : "tcp", "FromPort" : "80",  "ToPort" : "80",  "CidrIp" : "0.0.0.0/0" } ,{ "IpProtocol" : "icmp", "FromPort" : "8", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" } ],
+            "Tags" : [
+             {"Key" : "Name", "Value" : "Private-SG-Virginia"}
+           ]
+          }
+        },
+
+
+    "EC2Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : { "Fn::FindInMap" : [ "AMI", { "Ref" : "AmiType" }, "id"]},
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+             "#!/bin/bash \n",
+
+             "yum install -y httpd \n",
+             "# Install the files and packages from the metadata\n",
+             "service httpd start \n",
+             "chkconfig httpd on \n",
+       "echo '<h1>Hello from VA WEBSERVER 1 </h1>'>/var/www/html/index.html \n",
+       " chmod -R 755 /var/www/html"
+    ]]}},
+
+        "NetworkInterfaces" : [
+          { "DeviceIndex" : "0",
+            "AssociatePublicIpAddress" : "true",
+            "DeleteOnTermination" : "true",
+            "SubnetId" : { "Ref" : "PublicSubnet1" },
+            "GroupSet" : [ { "Ref" : "SecurityGroup" } ]
+  }],
+  "Tags" : [{"Key" : "Name", "Value" : "VA-WebServer-1" }]
+      }
+    },
+
+
+    "EC2Instance2" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : { "Fn::FindInMap" : [ "AMI", { "Ref" : "AmiType" }, "id"]},
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+             "#!/bin/bash \n",
+
+             "yum install -y httpd \n",
+
+             "service httpd start \n",
+             "chkconfig httpd on \n",
+       "echo '<h1>Hello from VA WebServer3 </h1>'>/var/www/html/index.html \n",
+       " chmod -R 755 /var/www/html"
+    ]]}},
+
+        "NetworkInterfaces" : [
+          { "DeviceIndex" : "0",
+            "AssociatePublicIpAddress" : "true",
+
+            "DeleteOnTermination" : "true",
+            "SubnetId" : { "Ref" : "PublicSubnet3" },
+            "GroupSet" : [ { "Ref" : "SecurityGroup" } ]
+  }],
+
+      "Tags" : [{"Key" : "Name", "Value" : "VA-WebServer-3" }]
+      }
+
+    },
+
+    "EC2Instance3" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : { "Fn::FindInMap" : [ "AMI", { "Ref" : "AmiType" }, "id"]},
+
+        "NetworkInterfaces" : [
+          { "DeviceIndex" : "0",
+            "AssociatePublicIpAddress" : "false",
+
+            "DeleteOnTermination" : "true",
+            "SubnetId" : { "Ref" : "PrivateSubnet2" },
+            "GroupSet" : [ { "Ref" : "SecurityGroupPrivate" } ]
+  }],
+
+      "Tags" : [{"Key" : "Name", "Value" : "VA-Private-Server-2" }]
+      }
+
+    }
+
+
+
+  }
+  }
