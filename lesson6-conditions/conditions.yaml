@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Password:
+    Type: String
+  PasswordConfirm:
+    Type: String
+
+Conditions:
+  MakeBucket:  !Equals [ !Ref Password, !Ref PasswordConfirm ]
+Resources:
+  S3Bucket:
+    Condition: MakeBucket
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicReadWrite
+  S3Bucket1:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicReadWrite
