@@ -1,0 +1,68 @@
+# Author: Saurav Sharma
+# Github.com/ravsau
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description : >
+     A sample template demonstrating AWS::CloudFormation::Interface
+     AWS::CloudFormation::Interface is a metadata key that defines how
+     parameters are grouped and sorted in the AWS CloudFormation console.
+     When you create or update stacks in the console, the console lists
+     input parameters in alphabetical order by their logical IDs. By
+     using this key, you can define your own parameter grouping and
+     ordering so that users can efficiently specify parameter values.
+
+# Reference: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudformation-interface.html
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Network Configuration"
+        Parameters:
+          - Subnet
+          - SecurityGroupEC2
+      -
+        Label:
+          default: "Amazon EC2 Configuration"
+        Parameters:
+          - InstanceType
+          - KeyName
+          - Ami
+    ParameterLabels:
+      Subnet:
+        default: "Which Subnet should this be deployed to?"
+
+Parameters:
+   InstanceType:
+     Type: String
+     Default: t2.micro
+   Ami:
+     Type: String
+     Default: "ami-0ff8a91507f77f867"
+   Subnet:
+     Type: AWS::EC2::Subnet::Id
+     Description: "What Subnet to launch this to"
+   SecurityGroupEC2:
+     Type: List<AWS::EC2::SecurityGroup::GroupName>
+   KeyName:
+     Type: AWS::EC2::KeyPair::KeyName
+
+
+Resources:
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: !Ref Ami
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups: !Ref SecurityGroupEC2
+      SubnetId: !Ref Subnet
+
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: io1
+            Iops: 200
+            DeleteOnTermination: false
+            VolumeSize: 20
