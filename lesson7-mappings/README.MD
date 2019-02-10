@@ -10,6 +10,10 @@ The users then will be prompted to select the type of instance with 2 options pr
 You can add more options by modifying this template.
 
 
+## Official Reference 
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html
+
+
 
 
 
