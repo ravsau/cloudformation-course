@@ -1,0 +1,265 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: A sample template that creates 2 node cluster with kubernetes installsed/
+
+Parameters:
+  Keyname:
+    Description: The path of the  file.
+    Type: String
+    Default: JanKeyBipra
+
+
+Resources:
+    RootRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: "Allow"
+              Principal:
+                Service:
+                  - "ec2.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Path: "/"
+        Policies:
+          -
+            PolicyName: "root"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                -
+                  Effect: "Allow"
+                  Action: "*"
+                  Resource: "*"
+    RootInstanceProfile:
+      Type: "AWS::IAM::InstanceProfile"
+      Properties:
+        Path: "/"   # What's this??
+        Roles:
+          -
+            Ref: "RootRole"
+
+
+    Master:
+        Type: "AWS::EC2::Instance" # 1 Quotes are unnecessary here - will they always be?
+        Properties:
+          ImageId: ami-cfe4b2b0    # 2 AMAZON AMI to get the CF-INIT WORKING
+          InstanceType: t2.micro
+          IamInstanceProfile : !Ref RootInstanceProfile
+          KeyName: !Ref Keyname
+          Tags:                    # 3 Here I switch to using single spaces
+           - Key: Name            # 4 Tag list item is inline
+             Value: Kube-Master
+
+
+          UserData:
+            Fn::Base64: !Sub |     # No more Fn::Join needed
+              #!/bin/bash
+              # pre
+              swapoff -a
+              setenforce 0
+              sudo sed -i 's/enforcing/disabled/g' /etc/selinux/config /etc/selinux/config
+              yum install ntp
+
+              # rebootk
+              # Pip ans AWSCLI INSTALL
+              curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+              python get-pip.py
+              pip install awscli
+
+              # docker
+              sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-selinux docker-engine-selinux docker-engine
+              sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+              sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+              sudo yum install docker-ce
+              sudo systemctl start docker && systemctl enable docker
+              sudo docker run hello-world
+
+
+              # k8
+              cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+              [kubernetes]
+              name=Kubernetes
+              baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+              enabled=1
+              gpgcheck=1
+              repo_gpgcheck=1
+              gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+              EOF
+
+              yum install -y kubelet kubeadm kubectl
+              systemctl enable kubelet && systemctl start kubelet
+
+
+
+              sed -i "s/cgroup-driver=systemd/cgroup-driver=cgroupfs/g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+
+              systemctl daemon-reload
+              systemctl restart kubelet
+
+              # change in netwodk
+
+              cat <<EOF >  /etc/sysctl.d/k8s.conf
+              net.bridge.bridge-nf-call-ip6tables = 1
+              net.bridge.bridge-nf-call-iptables = 1
+              EOF
+              sysctl --system
+
+              #download cfn-scripts
+
+              cd /opt
+              curl -O https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+              tar -xvpf aws-cfn-bootstrap-latest.tar.gz
+              cd aws-cfn-bootstrap-1.4/
+              python setup.py build
+              python setup.py install
+              ln -s /usr/init/redhat/cfn-hup /etc/init.d/cfn-hup
+              chmod 775 /usr/init/redhat/cfn-hup
+              cd /opt
+              mkdir aws
+              cd aws
+              mkdir bin
+              ln -s /usr/bin/cfn-hup /opt/aws/bin/cfn-hup
+              ln -s /usr/bin/cfn-init /opt/aws/bin/cfn-init
+              ln -s /usr/bin/cfn-signal /opt/aws/bin/cfn-signal
+              ln -s /usr/bin/cfn-elect-cmd-leader /opt/aws/bin/cfn-elect-cmd-leader
+              ln -s /usr/bin/cfn-get-metadata /opt/aws/bin/cfn-get-metadata
+              ln -s /usr/bin/cfn-send-cmd-event /opt/aws/bin/cfn-send-cmd-event
+              ln -s /usr/bin/cfn-send-cmd-result /opt/aws/bin/cfn-send-cmd-result
+
+
+              #curl  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.amzn1.noarch.rpm --o "aws-cfn-bootstrap.rpm"
+              # dependency for cfn-scripts
+              #   pip install pystache
+              # pip install python-daemon
+
+              #cfn-signal . Instead of us-east-1 try yo use $(AWS:Region)
+              /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource Master  --region us-east-1
+
+
+
+
+
+
+              kubeadm init  --pod-network-cidr=10.244.0.0/16 > /tmp/output.txt
+
+              export KUBECONFIG=/etc/kubernetes/admin.conf
+              export KUBECONFIG=/etc/kubernetes/admin.conf
+
+
+              #3 lines of code that made it work
+
+              mkdir -p /home/centos/.kube
+              cp -i /etc/kubernetes/admin.conf /home/centos/.kube/config
+              sudo chown centos:$centos /home/centos/.kube/config
+
+              #if you are the root user, you could run this:
+
+
+
+              cat /tmp/output.txt | egrep -i "kubeadm join" >/tmp/join.txt
+
+
+
+
+              aws sqs send-message --queue-url https://sqs.us-east-1.amazonaws.com/458233755827/myqueue --message-body "`cat /tmp/join.txt`" --region us-east-1
+
+
+              yum update -y aws-cfn-bootstrap
+              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource Master --region us-east-1
+
+
+
+
+
+
+              kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
+              export KUBECONFIG=/etc/kubernetes/admin.conf
+              sudo echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> ~/.bash_profile
+
+
+        CreationPolicy:
+          ResourceSignal:
+            Timeout: PT15M
+            Count: 1
+
+    MyEC2Instance0:
+        Type: "AWS::EC2::Instance" # 1 Quotes are unnecessary here - will they always be?
+        DependsOn: Master
+        Properties:
+          ImageId: ami-0063927a    # 2 Quotes removed from the example - still works
+          InstanceType: t2.micro
+          IamInstanceProfile : !Ref RootInstanceProfile
+          KeyName: !Ref Keyname
+          Tags:                    # 3 Here I switch to using single spaces
+           - Key: Name             # 4 Tag list item is inline
+             Value: Kube-Slave
+
+          UserData:
+            Fn::Base64: !Sub |
+              Ref: Userdata
+
+
+          UserData:
+            Fn::Base64: !Sub |     # No more Fn::Join needed
+              #!/bin/bash
+              # pre
+              swapoff -a
+              setenforce 0
+              sudo sed -i 's/enforcing/disabled/g' /etc/selinux/config /etc/selinux/config
+              yum install ntp
+
+              # rebootk
+
+              # Pip ans AWSCLI INSTALL
+              curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+              python get-pip.py
+              pip install awscli
+
+              # docker
+              sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-selinux docker-engine-selinux docker-engine
+              sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+              sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+              sudo yum install docker-ce
+              sudo systemctl start docker && systemctl enable docker
+              sudo docker run hello-world
+
+
+              # k8
+              cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+              [kubernetes]
+              name=Kubernetes
+              baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+              enabled=1
+              gpgcheck=1
+              repo_gpgcheck=1
+              gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+              EOF
+
+              yum install -y kubelet kubeadm kubectl
+              systemctl enable kubelet && systemctl start kubelet
+              sed -i "s/cgroup-driver=systemd/cgroup-driver=cgroupfs/g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+
+              systemctl daemon-reload
+              systemctl restart kubelet
+
+              # change in netwodk
+
+              cat <<EOF >  /etc/sysctl.d/k8s.conf
+              net.bridge.bridge-nf-call-ip6tables = 1
+              net.bridge.bridge-nf-call-iptables = 1
+              EOF
+              sysctl --system
+
+              aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/458233755827/myqueue --attribute-names All --message-attribute-names All --max-number-of-messages 10 --wait-time-seconds 5 --region us-east-1 --query 'Messages[*].Body' --output text >/tmp/command.txt
+              kubeadm reset
+              `cat /tmp/command.txt`
+
+              #kubeadm init
+              #kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml

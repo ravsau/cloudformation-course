@@ -1,0 +1,33 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: A sample template that creates 2 node cluster with kubernetes installsed/
+
+Parameters:
+  Keyname:
+    Description: The path of the  file.
+    Type: String
+
+
+
+Resources:
+
+
+
+    Master:
+        Type: "AWS::EC2::Instance" # 1 Quotes are unnecessary here - will they always be?
+        Properties:
+          ImageId: ami-cfe4b2b0    # 2 AMAZON AMI to get the CF-INIT WORKING
+          InstanceType: t2.micro
+          KeyName: !Ref Keyname
+          Tags:                    # 3 Here I switch to using single spaces
+           - Key: Name            # 4 Tag list item is inline
+             Value: Kube-Master
+
+
+          UserData:
+            Fn::Base64: !Sub |     # No more Fn::Join needed
+              #!/bin/bash
+              yum install httpd -y
+              service httpd start
+              echo "hello"> /var/www/html/index.html

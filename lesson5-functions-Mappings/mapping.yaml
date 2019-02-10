@@ -6,16 +6,23 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  OSType:
+    Default: linux
+    AllowedValues: 
+      - linux
+      - windows
 
+      
 Mappings:
   
   RegionToAMI:
     us-east-1:
-      ami: ami-0080e4c5bc078760e
+      linux: ami-0080e4c5bc078760e
+      windows: ami-07a29e78aeb420471
 
     us-west-2:
-      ami: ami-01e24be29428c15b2
-   
+      linux: ami-01e24be29428c15b2
+      windows: ami-0120697141ba7b40d
     
 Resources:
   EC2Instance:
