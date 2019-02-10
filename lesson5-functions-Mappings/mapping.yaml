@@ -27,7 +27,7 @@ Resources:
         Ref: KeyName
       ImageId:
         !FindInMap
-        - RegionToAmi
+        - RegionToAMI
         - Ref: AWS::Region
         - ami
         
