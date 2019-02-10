@@ -7,6 +7,7 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
   OSType:
+    Type: String
     Default: linux
     AllowedValues: 
       - linux
@@ -35,8 +36,8 @@ Resources:
       ImageId:
         !FindInMap
         - RegionToAMI
-        - Ref: AWS::Region
-        - ami
+        - !Ref AWS::Region
+        - !Ref OSType
         
 
 
