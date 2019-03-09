@@ -1,0 +1,37 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a simple Amazon Linux Instance and allow SSH connectivity.
+Parameters:
+  KeyName:
+    Description: EC2 Key Pair for SSH Access, you must have created these prior to
+      running this.
+    Type: AWS::EC2::KeyPair::KeyName
+  VpcId:
+    Description: 'Please insert one of your VPC ID. you can find this info in the
+      VPC console '
+    Type: AWS::EC2::VPC::Id
+Resources:
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName:
+        Ref: KeyName
+      InstanceType: t2.micro
+      ImageId: ami-8c1be5f6
+      NetworkInterfaces:
+      - GroupSet:
+        - Ref: SimpleInstanceSg
+        AssociatePublicIpAddress: 'true'
+        DeviceIndex: '0'
+        DeleteOnTermination: 'true'
+  SimpleInstanceSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0
