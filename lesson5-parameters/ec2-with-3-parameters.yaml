@@ -10,6 +10,12 @@ Parameters:
     Description: 'Please insert one of your VPC ID. you can find this info in the
       VPC console '
     Type: AWS::EC2::VPC::Id
+
+  ImageId:
+    Description: 'Please insert an Image ID of the AMI you want to use. Leave the field unchanged to use the Amazon Linux AMI on us-east-1 '
+    Type: String
+    Default: ami-8c1be5f6
+
 Resources:
   SimpleInstance:
     Type: AWS::EC2::Instance
@@ -17,13 +23,13 @@ Resources:
       KeyName:
         Ref: KeyName
       InstanceType: t2.micro
-      ImageId: ami-8c1be5f6
+      ImageId: !Ref ImageId
       NetworkInterfaces:
       - GroupSet:
         - Ref: SimpleInstanceSg
-        AssociatePublicIpAddress: 'true'
+        AssociatePublicIpAddress: true
         DeviceIndex: '0'
-        DeleteOnTermination: 'true'
+        DeleteOnTermination: true
   SimpleInstanceSg:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -32,6 +38,6 @@ Resources:
         Ref: VpcId
       SecurityGroupIngress:
       - IpProtocol: tcp
-        FromPort: '22'
-        ToPort: '22'
+        FromPort: 22
+        ToPort: 22
         CidrIp: 0.0.0.0/0
