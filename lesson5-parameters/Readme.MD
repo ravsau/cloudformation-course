@@ -1,5 +1,8 @@
-## 7.1 - Parameter Groups 
+## 7.1 How to create parameters and add default paramter values ( YAML)
 
-### We can group parameters like this. Otherwise they will be listed in alphabetical order.
-![image](https://user-images.githubusercontent.com/22568316/45260682-9d0e0c80-b3bb-11e8-936c-3db84985f90f.png)
+
+## 7.2 Parameter Allowed Values
+
+## 7.3 - Parameter Groups 
+
 
