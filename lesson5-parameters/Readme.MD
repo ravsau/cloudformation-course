@@ -6,3 +6,7 @@
 
 ## 5.3 - Parameter Groups
 [Link](5.3-parameter-groups.MD)
+
+
+## References
+- https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html

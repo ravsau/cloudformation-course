@@ -1,0 +1,22 @@
+## Parent stack can use child stack resources but not vice-versa
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a simple Amazon Linux Instance and allow SSH connectivity.
+
+Resources:
+  SimpleInstanceSg:
+     Type: AWS::EC2::SecurityGroup
+     Properties:
+       GroupDescription: Enable SSH access via port 22
+       SecurityGroupIngress:
+       - IpProtocol: tcp
+         FromPort: 22
+         ToPort: 22
+         CidrIp: 0.0.0.0/0
+
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        SG: !Ref SimpleInstanceSg
+      TemplateURL: nested-ec2.yaml

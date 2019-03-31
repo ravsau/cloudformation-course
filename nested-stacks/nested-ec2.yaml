@@ -1,0 +1,13 @@
+# Parameters need to be defined in the child stack before parameters can be passed on.
+Parameters:
+  SG:
+    Type: String
+
+Resources:
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+
+      InstanceType: t2.micro
+      ImageId: ami-8c1be5f6
+      SecurityGroups: [!Ref 'SG']

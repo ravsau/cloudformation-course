@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a simple Amazon Linux Instance and allow SSH connectivity.
+Resources:
+  EC2Stack:
+    Properties:
+      Parameters:
+        SG:
+          Ref: SimpleInstanceSg
+      TemplateURL: https://s3.amazonaws.com/cloudyeti-cloudformation/b0830e8dbb17b9f192462c9d1b6cdea4.template
+    Type: AWS::CloudFormation::Stack
+  SimpleInstanceSg:
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
+    Type: AWS::EC2::SecurityGroup
