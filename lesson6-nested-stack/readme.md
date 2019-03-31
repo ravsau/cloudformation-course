@@ -4,7 +4,7 @@
 
 As your infrastructure grows, common patterns can emerge in which you declare the same components in multiple templates\. You can separate out these common components and create dedicated templates for them\. Then use the resource in your template to reference other templates, creating nested stacks\.
 
-In our example, we will have an EC2 instance in the root stack and have security group for the instance in the child stack. 
+In our example, we will have an security group in the root stack and we will have an EC2  instance in the child stack. 
 
 
 
