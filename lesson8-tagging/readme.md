@@ -5,7 +5,9 @@ In addition to any tags you define, AWS CloudFormation automatically creates the
 
 The `aws:` prefix is reserved for AWS use\. This prefix is case\-insensitive\. If you use this prefix in the `Key` or `Value` property, you cannot update or delete the tag\. Tags with this prefix don't count toward the number of tags per resource\.
 
-All stack\-level tags, including automatically created tags, are propagated to resources that AWS CloudFormation supports\. Currently, tags are not propagated to Amazon EBS volumes that are created from block device mappings\.
+**All stack\-level tags, including automatically created tags, are propagated to resources that AWS CloudFormation supports\.**
+
+Currently, tags are not propagated to Amazon EBS volumes that are created from block device mappings\.
 
 
 Reference: 
@@ -54,4 +56,7 @@ Steps:
 - We will first look at the AWS CLI way of adding tags to the Stack and verify the tags propagation to the individual resources. Replace 
 
 `aws cloudformation create-stack --stack-name tags-test8 --template-body file://tags-test-multiple-resource.yaml --tags Key=ProjectID,Value=53 Key=Team,Value=Security                                                         `
+You can verify if the tags are propagated to each resources by finding the Resource on the AWS Management Console. This is how the tags section looked for the S3 bucket created with the above CloudFormation template. 
+
+![image](https://user-images.githubusercontent.com/22568316/97523024-8ea65480-1977-11eb-9e16-69df78060a17.png)
 
