@@ -1,0 +1,24 @@
+## Author: Saurav Sharma @ravsau on github/twitter
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create multiple AWS resources to test Cloudformation Tags propagation.
+
+Resources:
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-8c1be5f6
+
+  SimpleInstance1:
+    Type: AWS::EC2::Instance
+
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-8c1be5f6
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
