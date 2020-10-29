@@ -55,8 +55,13 @@ Steps:
 
 - We will first look at the AWS CLI way of adding tags to the Stack and verify the tags propagation to the individual resources. Replace 
 
-`aws cloudformation create-stack --stack-name tags-test8 --template-body file://tags-test-multiple-resource.yaml --tags Key=ProjectID,Value=53 Key=Team,Value=Security                                                         `
+`aws cloudformation create-stack --stack-name tags-test8 --template-body file://tags-test-multiple-resource.yaml --tags Key=ProjectID,Value=53 Key=Team,Value=Security`    
+
+---
+
 You can verify if the tags are propagated to each resources by finding the Resource on the AWS Management Console. This is how the tags section looked for the S3 bucket created with the above CloudFormation template. 
 
 ![image](https://user-images.githubusercontent.com/22568316/97523024-8ea65480-1977-11eb-9e16-69df78060a17.png)
+
+
 
