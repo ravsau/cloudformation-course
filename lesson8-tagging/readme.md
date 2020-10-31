@@ -1,20 +1,36 @@
-In addition to any tags you define, AWS CloudFormation automatically creates the following stack\-level tags with the prefix ```aws:``` :
-+ `aws:cloudformation:logical-id`
-+ `aws:cloudformation:stack-id`
-+ `aws:cloudformation:stack-name`
 
-The `aws:` prefix is reserved for AWS use\. This prefix is case\-insensitive\. If you use this prefix in the `Key` or `Value` property, you cannot update or delete the tag\. Tags with this prefix don't count toward the number of tags per resource\.
+
+Tagging is a very important aspect in Management and Governance of AWS Accounts of any individual or organization.
+
+Here are some advantages of tagging your AWS resources:
+
+1.  Organize AWS resources - Filter all resources with a certain tag
+2.  Use tags for Cost Allocation - what Application costs the most?
+3.  Use tags for automation - opt/in out your ec2 instances to stop in evenings/weekends
+4.  Use tags for Access Control - Restrict EC2 API calls in resources tagged as Production
+
+I got these four advantages from an AWS Documentation page. Click [here](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) to read more.
+
+Now we have established that tagging is useful. Let's look at how Cloudformation allows `Tag Inheritance` to simplify tagging of resources in a stack.
+
+In addition to any tags you define for an individual resource, AWS CloudFormation automatically creates the following stack\-level tags with the prefix `aws:` :
+
+- `aws:cloudformation:logical-id`
+- `aws:cloudformation:stack-id`
+- `aws:cloudformation:stack-name`
 
 **All stack\-level tags, including automatically created tags, are propagated to resources that AWS CloudFormation supports\.**
 
 Currently, tags are not propagated to Amazon EBS volumes that are created from block device mappings\.
 
-
-Reference: 
+Reference:
 https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html
 
+This feature makes tagging all your resources extremely simple when using Cloudformation to provision resources. Apply tags once at the stack level and all the tags propogate to the supported Stack resources.
 
-### Lab Template( Also available as a seperate file on this folder). This will only work in the US-east-1 regino due to hardcoded AMI value
+Let's test this out!
+
+### Lab Template( Also available as a seperate file on [this folder](https://github.com/ravsau/cloudformation-course/tree/master/lesson8-tagging)). This will only work in the US-east-1 regino due to hardcoded AMI value
 
 ```
 ---
@@ -43,25 +59,25 @@ Resources:
 
 
 ```
-2 Methods of deplyoing this template: 
 
-1)  You can use this template and add tags to the Cloudformation Stack from the AWS Management Console. 
-     OR 
-2)  You can use the AWS CLI. 
-    
-    
-Steps: 
--  Download the template above ( also available as a seperate file on this folder) 
+2 Methods of deplyoing this template:
 
-- We will first look at the AWS CLI way of adding tags to the Stack and verify the tags propagation to the individual resources. Replace 
+1.  You can use this template and add tags to the Cloudformation Stack from the AWS Management Console.
+    OR
+2.  You can use the AWS CLI.
 
-`aws cloudformation create-stack --stack-name tags-test8 --template-body file://tags-test-multiple-resource.yaml --tags Key=ProjectID,Value=53 Key=Team,Value=Security`    
+Steps:
+
+- Download the template above ( also available as a seperate file on this folder)
+
+- We will first look at the AWS CLI way of adding tags to the Stack and verify the tags propagation to the individual resources. Replace
+
+`aws cloudformation create-stack --stack-name tags-test8 --template-body file://tags-test-multiple-resource.yaml --tags Key=ProjectID,Value=53 Key=Team,Value=Security`
 
 ---
 
-You can verify if the tags are propagated to each resources by finding the Resource on the AWS Management Console. This is how the tags section looked for the S3 bucket created with the above CloudFormation template. 
+You can verify if the tags are propagated to each resources by finding the Resource on the AWS Management Console. This is how the tags section looked for the S3 bucket created with the above CloudFormation template.
 
 ![image](https://user-images.githubusercontent.com/22568316/97523024-8ea65480-1977-11eb-9e16-69df78060a17.png)
 
-
-
+Let me know if you have any questions.
