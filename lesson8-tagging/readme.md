@@ -1,5 +1,6 @@
 ## Cloudformation and how tag propogatation work ( Blog+Lab) 
 
+
 Tagging is a crucial aspect of Management and Governance of AWS Accounts of any individual or organization.
 
 Here are some advantages of tagging your AWS resources:
@@ -20,7 +21,6 @@ In addition to any tags you define for an individual resource, AWS CloudFormatio
 - `aws:cloudformation:stack-name`
 
 **All stack\-level tags, including automatically created tags, are propagated to resources that AWS CloudFormation supports\.**
-
 
 Reference:
 https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html
@@ -77,6 +77,11 @@ Steps:
 
 You can verify if Cloudformation propagated tags to each resource by using the AWS Management Console. This image below shows how the tags section looked for the S3 bucket created with the above CloudFormation template.
 
-![image](https://user-images.githubusercontent.com/22568316/97523024-8ea65480-1977-11eb-9e16-69df78060a17.png)
+![AWS Console Screenshot](https://user-images.githubusercontent.com/22568316/97523024-8ea65480-1977-11eb-9e16-69df78060a17.png)
+
+Cleanup:
+Make sure you delete your CloudFormation Stack to stop incurring charges.
+
+`aws cloudformation delete-stack --stack-name tags-test8`
 
 Let me know if you have any questions.
