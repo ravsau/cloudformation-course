@@ -69,7 +69,7 @@ Steps:
 
 - Download the template above ( also available as a separate file on this folder)
 
-- We will use AWS CLI way of adding tags to the Stack and verify the propagation of the tag to the individual resources. Replace
+- We will use AWS CLI way of adding tags to the Stack and verify the propagation of the tag to the individual resources. Replace the stack name with the name of your CloudFormation template file. 
 
 `aws cloudformation create-stack --stack-name tags-test8 --template-body file://tags-test-multiple-resource.yaml --tags Key=ProjectID,Value=53 Key=Team,Value=Security`
 
